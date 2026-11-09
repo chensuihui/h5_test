@@ -5,12 +5,43 @@
   <meta charset="UTF-8">
   <meta name="viewport"
         content="width=device-width, initial-scale=1">
-  <title>H5 Result</title>
+  <title>VPN Network Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 15px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    button {
+      padding: 10px 20px;
+    }
+  </style>
 </head>
 <body>
-  <h2>Browser Session Verification</h2>
+
+  <h2>WeCom VPN Test</h2>
+
+  <h3>Session Verification</h3>
   <p id="status">Validating...</p>
-  <pre id="info"></pre>
+
+  <div id="content" hidden>
+    <h3>Public IP</h3>
+    <p id="ip">Checking...</p>
+
+    <button onclick="checkIP()">Retry IP Check</button>
+
+    <h3>Browser Information</h3>
+    <pre id="browserInfo"></pre>
+
+    <h3>Network Request Result</h3>
+    <pre id="networkInfo"></pre>
+  </div>
 
   <script>
     const params = new URLSearchParams(location.search);
@@ -19,29 +50,78 @@
       sessionStorage.getItem("jumpToken");
 
     const status = document.getElementById("status");
-    const info = document.getElementById("info");
 
     if (urlToken && storedToken &&
         urlToken === storedToken) {
 
       status.textContent = "Access Granted";
 
+      document.getElementById("content").hidden = false;
+
       const browserInfo =
         sessionStorage.getItem("browserInfo");
 
-      info.textContent = browserInfo
-        ? JSON.stringify(JSON.parse(browserInfo), null, 2)
-        : "No browser info";
+      document.getElementById("browserInfo").textContent =
+        browserInfo
+          ? JSON.stringify(JSON.parse(browserInfo), null, 2)
+          : "No browser info";
 
       sessionStorage.removeItem("jumpToken");
       sessionStorage.removeItem("browserInfo");
 
-      history.replaceState(
-        null, "", location.pathname
-      );
+      history.replaceState(null, "", location.pathname);
+
+      checkIP();
+
     } else {
       status.textContent = "Access Denied";
     }
+
+    async function checkIP() {
+      const ipElement = document.getElementById("ip");
+      const networkElement =
+        document.getElementById("networkInfo");
+
+      ipElement.textContent = "Checking...";
+      networkElement.textContent = "Requesting...";
+
+      const start = performance.now();
+
+      try {
+        const response = await fetch(
+          "https://api.ipify.org?format=json",
+          { cache: "no-store" }
+        );
+
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        const duration =
+          Math.round(performance.now() - start);
+
+        ipElement.textContent = data.ip;
+
+        networkElement.textContent = JSON.stringify({
+          requestURL: response.url,
+          status: response.status,
+          publicIP: data.ip,
+          durationMs: duration,
+          timestamp: new Date().toISOString()
+        }, null, 2);
+
+      } catch (error) {
+        ipElement.textContent = "Request Failed";
+
+        networkElement.textContent = JSON.stringify({
+          error: error.message,
+          timestamp: new Date().toISOString()
+        }, null, 2);
+      }
+    }
   </script>
+
 </body>
 </html>
