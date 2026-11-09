@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>H5 Result</title>
+</head>
+<body>
+  <h2>Browser Session Verification</h2>
+  <p id="status">Validating...</p>
+  <pre id="info"></pre>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const urlToken = params.get("token");
+    const storedToken =
+      sessionStorage.getItem("jumpToken");
+
+    const status = document.getElementById("status");
+    const info = document.getElementById("info");
+
+    if (urlToken && storedToken &&
+        urlToken === storedToken) {
+
+      status.textContent = "Access Granted";
+
+      const browserInfo =
+        sessionStorage.getItem("browserInfo");
+
+      info.textContent = browserInfo
+        ? JSON.stringify(JSON.parse(browserInfo), null, 2)
+        : "No browser info";
+
+      sessionStorage.removeItem("jumpToken");
+      sessionStorage.removeItem("browserInfo");
+
+      history.replaceState(
+        null, "", location.pathname
+      );
+    } else {
+      status.textContent = "Access Denied";
+    }
+  </script>
+</body>
+</html>
