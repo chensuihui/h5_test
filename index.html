@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>H5 Entry</title>
+</head>
+<body>
+  <h2>Browser Session Test</h2>
+  <p>点击按钮跳转到验证页面</p>
+  <button onclick="goToResult()">跳转</button>
+
+  <script>
+    function goToResult() {
+      const token = crypto.randomUUID();
+
+      sessionStorage.setItem("jumpToken", token);
+
+      const info = {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        platform: navigator.platform,
+        screen: `${screen.width}x${screen.height}`,
+        time: new Date().toISOString()
+      };
+
+      sessionStorage.setItem(
+        "browserInfo", JSON.stringify(info)
+      );
+
+      const url = new URL("./result.html", location.href);
+      url.searchParams.set("token", token);
+
+      location.href = url.href;
+    }
+  </script>
+</body>
+</html>
